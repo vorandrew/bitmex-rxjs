@@ -1,0 +1,26 @@
+{
+  "name": "bitmex-rxjs",
+  "version": "1.0.0",
+  "description": "Bitmex RxJS",
+  "main": "lib.js",
+  "author": "Andrey Vorobyov <vorandrew@gmail.com>",
+  "license": "MIT",
+  "repository": "git@github.com:santacruz123/bitmex-rxjs.git",
+  "scripts": {
+    "build": "babel -o lib.js --minified index.js",
+    "prepare": "yarn build",
+    "dev": "nodemon --exec babel-node index.js"
+  },
+  "dependencies": {
+    "bitmex-realtime-api": "^0.4.0",
+    "dotenv": "^6.2.0",
+    "rxjs": "^6.4.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.2.3",
+    "@babel/core": "^7.3.4",
+    "@babel/node": "^7.2.2",
+    "@babel/preset-env": "^7.3.4",
+    "nodemon": "^1.18.10"
+  }
+}
