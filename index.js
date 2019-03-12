@@ -13,7 +13,7 @@ const client = new BitMEXClient({
 
 const priceTmp = new Subject()
 const positionTmp = new Subject()
-const orders$ = new Subject()
+const ordersTmp = new Subject()
 
 client.addStream('XBTUSD', 'order', data => orders$.next(data))
 
@@ -29,6 +29,8 @@ client.addStream('XBTUSD', 'position', data => {
 
   positionTmp.next({ price, qua })
 })
+
+const orders$ = ordersTmp.pipe(share())
 
 const price$ = priceTmp.pipe(
   distinctUntilChanged((n, o) => n.bid === o.bid && n.ask === o.ask),
