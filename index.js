@@ -13,6 +13,9 @@ const client = new BitMEXClient({
 
 const priceTmp = new Subject()
 const positionTmp = new Subject()
+const orders$ = new Subject()
+
+client.addStream('XBTUSD', 'order', data => orders$.next(data))
 
 client.addStream('XBTUSD', 'quote', data => {
   const len = data.length
@@ -40,4 +43,5 @@ const position$ = positionTmp.pipe(
 export default {
   price$,
   position$,
+  orders$,
 }
