@@ -2,7 +2,7 @@ import 'dotenv/config'
 
 import { Subject } from 'rxjs'
 
-import { distinctUntilChanged, share } from 'rxjs/operators'
+import { distinctUntilChanged, share, startWith } from 'rxjs/operators'
 
 import BitMEXClient from 'bitmex-realtime-api'
 
@@ -15,7 +15,7 @@ const priceTmp = new Subject()
 const positionTmp = new Subject()
 const ordersTmp = new Subject()
 
-client.addStream('XBTUSD', 'order', data => orders$.next(data))
+client.addStream('XBTUSD', 'order', data => ordersTmp.next(data))
 
 client.addStream('XBTUSD', 'quote', data => {
   const len = data.length
@@ -30,7 +30,10 @@ client.addStream('XBTUSD', 'position', data => {
   positionTmp.next({ price, qua })
 })
 
-const orders$ = ordersTmp.pipe(share())
+const orders$ = ordersTmp.pipe(
+  startWith([]),
+  share(),
+)
 
 const price$ = priceTmp.pipe(
   distinctUntilChanged((n, o) => n.bid === o.bid && n.ask === o.ask),
