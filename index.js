@@ -1,8 +1,12 @@
 import 'dotenv/config'
 
-import { Subject } from 'rxjs'
+import crypto from 'crypto'
+import got from 'got'
+import qs from 'querystring'
 
-import { distinctUntilChanged, share, startWith } from 'rxjs/operators'
+import { Subject, from, concat, timer } from 'rxjs'
+
+import { distinctUntilChanged, share, switchMap } from 'rxjs/operators'
 
 import BitMEXClient from 'bitmex-realtime-api'
 
@@ -13,9 +17,9 @@ const client = new BitMEXClient({
 
 const priceTmp = new Subject()
 const positionTmp = new Subject()
-const ordersTmp = new Subject()
+const orderEvents = new Subject()
 
-client.addStream('XBTUSD', 'order', data => ordersTmp.next(data))
+client.addStream('XBTUSD', 'order', data => orderEvents.next(data))
 
 client.addStream('XBTUSD', 'quote', data => {
   const len = data.length
@@ -30,8 +34,8 @@ client.addStream('XBTUSD', 'position', data => {
   positionTmp.next({ price, qua })
 })
 
-const orders$ = ordersTmp.pipe(
-  startWith([]),
+const orders$ = concat(timer(0), orderEvents).pipe(
+  switchMap(() => from(ordersPromise())),
   share(),
 )
 
@@ -45,8 +49,48 @@ const position$ = positionTmp.pipe(
   share(),
 )
 
+const BITMEX_API_KEY = process.env.BITMEX_API_KEY
+const BITMEX_API_SECRET = process.env.BITMEX_API_SECRET
+
+const gotClient = got.extend({
+  baseUrl: 'https://www.bitmex.com',
+  headers: {
+    'content-type': 'application/json',
+    Accept: 'application/json',
+    'api-key': BITMEX_API_KEY,
+  },
+})
+
+function ordersPromise() {
+  const verb = 'GET',
+    path = '/api/v1/order?' + qs.stringify({ filter: JSON.stringify({ open: 'true' }) }),
+    expires = Math.round(new Date().getTime() / 1000) + 60
+
+  const signature = crypto
+    .createHmac('sha256', BITMEX_API_SECRET)
+    .update(verb + path + expires)
+    .digest('hex')
+
+  const requestOptions = {
+    headers: {
+      'api-expires': expires,
+      'api-signature': signature,
+    },
+    responseType: 'json',
+  }
+
+  return gotClient
+    .get(path, requestOptions)
+    .then(r => JSON.parse(r.body))
+    .catch(error => {
+      const errJSON = JSON.parse(error.response.body)
+      throw Error(errJSON.error.message)
+    })
+}
+
 export default {
   price$,
   position$,
   orders$,
+  orderEvents$: orderEvents.pipe(share()),
 }

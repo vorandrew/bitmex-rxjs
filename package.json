@@ -14,6 +14,7 @@
   "dependencies": {
     "bitmex-realtime-api": "^0.4.0",
     "dotenv": "^6.2.0",
+    "got": "^9.6.0",
     "rxjs": "^6.4.0"
   },
   "devDependencies": {
