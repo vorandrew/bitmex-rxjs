@@ -40,22 +40,22 @@ client.addStream('XBTUSD', 'position', data => {
   positionTmp.next({ price, qua })
 })
 
-const orders$ = concat(timer(0), orderEvents).pipe(
+export const orders$ = concat(timer(0), orderEvents).pipe(
   switchMap(() => from(ordersPromise())),
   tap(debugOrders),
 )
 
-const orderEvents$ = orderEvents.pipe(
+export const orderEvents$ = orderEvents.pipe(
   tap(debugOrderEvents),
   share(),
 )
 
-const price$ = priceTmp.pipe(
+export const price$ = priceTmp.pipe(
   distinctUntilChanged((n, o) => n.bid === o.bid && n.ask === o.ask),
   tap(debugPrice),
 )
 
-const position$ = positionTmp.pipe(
+export const position$ = positionTmp.pipe(
   distinctUntilChanged((n, o) => n.price === o.price && n.qua === o.qua),
   tap(debugPositions),
 )
@@ -97,11 +97,4 @@ function ordersPromise() {
       const errJSON = JSON.parse(error.response.body)
       throw Error(errJSON.error.message)
     })
-}
-
-export default {
-  price$,
-  position$,
-  orders$,
-  orderEvents$,
 }
