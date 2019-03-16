@@ -6,19 +6,30 @@ import qs from 'querystring'
 import Debug from 'debug'
 
 import { Subject, from, concat, timer } from 'rxjs'
-
-import { distinctUntilChanged, share, tap, switchMap } from 'rxjs/operators'
+import { distinctUntilChanged, share, tap, switchMap, skip } from 'rxjs/operators'
 
 import BitMEXClient from 'bitmex-realtime-api'
+
+const BITMEX_API_KEY = process.env.BITMEX_API_KEY
+const BITMEX_API_SECRET = process.env.BITMEX_API_SECRET
 
 const client = new BitMEXClient({
   apiKeyID: process.env.BITMEX_API_KEY || null,
   apiKeySecret: process.env.BITMEX_API_SECRET || null,
 })
 
+const gotClient = got.extend({
+  baseUrl: 'https://www.bitmex.com',
+  headers: {
+    'content-type': 'application/json',
+    Accept: 'application/json',
+    'api-key': BITMEX_API_KEY,
+  },
+})
+
 const debugOrders = Debug('bitmex-rxjs:orders')
 const debugOrderEvents = Debug('bitmex-rxjs:order_events')
-const debugPositions = Debug('bitmex-rxjs:position')
+const debugPosition = Debug('bitmex-rxjs:position')
 const debugPrice = Debug('bitmex-rxjs:price')
 
 const priceTmp = new Subject()
@@ -57,20 +68,8 @@ export const price$ = priceTmp.pipe(
 
 export const position$ = positionTmp.pipe(
   distinctUntilChanged((n, o) => n.price === o.price && n.qua === o.qua),
-  tap(debugPositions),
+  tap(debugPosition),
 )
-
-const BITMEX_API_KEY = process.env.BITMEX_API_KEY
-const BITMEX_API_SECRET = process.env.BITMEX_API_SECRET
-
-const gotClient = got.extend({
-  baseUrl: 'https://www.bitmex.com',
-  headers: {
-    'content-type': 'application/json',
-    Accept: 'application/json',
-    'api-key': BITMEX_API_KEY,
-  },
-})
 
 function ordersPromise() {
   const verb = 'GET',
