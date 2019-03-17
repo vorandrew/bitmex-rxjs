@@ -64,11 +64,15 @@ export const orderEvents$ = orderEvents.pipe(
 export const price$ = priceTmp.pipe(
   distinctUntilChanged((n, o) => n.bid === o.bid && n.ask === o.ask),
   tap(debugPrice),
+  share(),
 )
 
 export const position$ = positionTmp.pipe(
-  distinctUntilChanged((n, o) => n.price === o.price && n.qua === o.qua),
+  distinctUntilChanged(
+    (n, o) => Math.round(n.price * 100) === Math.round(o.price * 100) && n.qua === o.qua,
+  ),
   tap(debugPosition),
+  share(),
 )
 
 function ordersPromise() {
