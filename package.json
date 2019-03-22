@@ -1,6 +1,6 @@
 {
   "name": "bitmex-rxjs",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Bitmex RxJS",
   "main": "lib.js",
   "author": "Andrey Vorobyov <vorandrew@gmail.com>",
